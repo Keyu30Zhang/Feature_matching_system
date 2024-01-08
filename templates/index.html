@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Matching</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+        h2 {
+            text-align: center;
+            margin-top: 30px;
+            font-weight: 700;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .label {
+            font-weight: 700;
+            color: #555;
+            display: block;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .button-container {
+            text-align: center; /* 容器内文本居中对齐 */
+            margin: 20px 0; /* 上下边距，根据需要调整 */
+        }
+
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px; /* 按钮之间的间隔，根据需要调整 */
+        }
+
+
+        /* 新增的flex container样式 */
+        .image-container {
+            display: flex; /* 使用flex布局 */
+            justify-content: space-around; /* 图像之间的间隔 */
+            text-align: center; /* 容器内文本居中对齐 */
+            align-items: center; /* 垂直居中 */
+        }
+
+
+        .image-container img {
+            max-width: 150%; /* 图像最大宽度，根据需要调整 */
+            height: auto; /* 图像高度自动调整 */
+            margin: 20px; /* 图像间隔，根据需要调整 */
+        }
+
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 20%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .column {
+            width: 48%;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>特征匹配系统</h2>
+
+        <div class="image-container">
+
+            <div>
+                <label class="label" for="image1">载入图像1:</label>
+                <input type="file" id="image1" accept="image/*">
+                <img id="displayImage1" src="" alt="Image 1">
+            </div>
+
+            <div>
+                <label class="label" for="image2">载入图像2:</label>
+                <input type="file" id="image2" accept="image/*">
+                <img id="displayImage2" src="" alt="Image 2">
+            </div>
+        </div>
+
+        <div class="button-container">
+            <button class="button" onclick="openParameterModal()">设置参数</button>
+            <button class="button" onclick="openMatchingMethodModal()">匹配方法</button>
+            <button class="button" onclick="startMatching()">开始匹配</button>
+        </div>
+
+        <div class="image-container">
+            <div>
+                <label class="label" for="image1">匹配结果:</label>
+                <img id="resultImage" src="" alt="Matched Image">
+            </div>
+        </div>
+
+        <!-- Placeholder for displaying results or additional UI elements -->
+        <div id="resultContainer"></div>
+
+        <!-- Modal for parameter input -->
+        <div id="parameterModal" class="modal">
+            <div class="modal-content">
+
+                <!-- Parameters for Image 1 -->
+                <div class="column">
+                    <label class="label" for="paramInput1">缩放比例 (图像1):</label>
+                    <input class="input" type="text" id="paramInput1" placeholder="输入图像1的缩放比例">
+
+                    <label class="label" for="paramInput2">旋转角度 (图像1):</label>
+                    <input class="input" type="text" id="paramInput2" placeholder="输入图像1的旋转角度">
+
+                    <label class="label" for="paramInput1">x方向平移量 (图像1):</label>
+                    <input class="input" type="text" id="paramInput3" placeholder="输入图像1的x方向平移量">
+
+                    <label class="label" for="paramInput1">y方向平移量 (图像1):</label>
+                    <input class="input" type="text" id="paramInput4" placeholder="输入图像1的y方向平移量">
+
+                    <label class="label" for="paramInput1">光照 (图像1):</label>
+                    <input class="input" type="text" id="paramInput5" placeholder="输入图像1的光照">
+                    <!-- Add more parameters for Image 1 if needed -->
+                </div>
+
+                <!-- Parameters for Image 2 -->
+                <div class="column">
+                    <label class="label" for="paramInput3">缩放比例 (图像2):</label>
+                    <input class="input" type="text" id="paramInput6" placeholder="输入图像2的缩放比例">
+
+                    <label class="label" for="paramInput4">旋转角度 (图像2):</label>
+                    <input class="input" type="text" id="paramInput7" placeholder="输入图像2的旋转角度">
+
+                    <label class="label" for="paramInput3">x方向平移量(图像2):</label>
+                    <input class="input" type="text" id="paramInput8" placeholder="输入图像2的x方向平移量">
+
+                    <label class="label" for="paramInput4">y方向平移量 (图像2):</label>
+                    <input class="input" type="text" id="paramInput9" placeholder="输入图像2的y方向平移量">
+
+                    <label class="label" for="paramInput4">光照(图像2):</label>
+                    <input class="input" type="text" id="paramInput10" placeholder="输入图像2的光照">
+                    <!-- Add more parameters for Image 2 if needed -->
+                </div>
+
+                <button class="button" onclick="closeParameterModal()">确认</button>
+            </div>
+        </div>
+
+        <div id="matchingMethodModal" class="modal">
+            <div class="modal-content">
+                <!-- 组合框 -->
+                <label for="matchingMethod1">特征提取算子:</label>
+                <select id="matchingMethod1" name="matchingMethod1">
+                    <option value="SIFT">SIFT</option>
+                </select>
+                <label for="matchingMethod2">匹配算子:</label>
+                <select id="matchingMethod2" name="matchingMethod2">
+                    <option value="BF">BF</option>
+                    <option value="FLANN">FLANN</option>
+                </select>
+                </select>
+                <label for="matchingMethod2">是否用RANSANC:</label>
+                <select id="matchingMethod3" name="matchingMethod2">
+                    <option value=True>是</option>
+                    <option value=False>否</option>
+                </select>
+                <!-- 参数输入框 -->
+                <label for="parameterInput">ratio:</label>
+                <input type="text" id="parameterInput" name="parameter">
+                <!-- 确定按钮 -->
+                <button class="button" onclick="uploadMeasures()">确定</button>
+
+            </div>
+        </div>
+
+    </div>
+    <script>
+        // JavaScript functions for interaction and functionality can be added here
+
+        function openParameterModal() {
+            document.getElementById("parameterModal").style.display = "block";
+        }
+        // 用于清除参数输入框的内容
+        function clearParameterInputs() {
+            $('input[type="text"]').val(''); // 清除所有文本输入框的内容
+        }
+
+        function closeParameterModal() {
+            // 收集参数
+            var param1 = document.getElementById('paramInput1').value;
+            var param2 = document.getElementById('paramInput2').value;
+            var param3 = document.getElementById('paramInput3').value;
+            var param4 = document.getElementById('paramInput4').value;
+            var param5 = document.getElementById('paramInput5').value;
+            var param6 = document.getElementById('paramInput6').value;
+            var param7 = document.getElementById('paramInput7').value;
+            var param8 = document.getElementById('paramInput8').value;
+            var param9 = document.getElementById('paramInput9').value;
+            var param10 = document.getElementById('paramInput10').value;
+
+            // 创建一个包含所有参数的对象
+            var params = {
+                param1: param1,
+                param2: param2,
+                param3: param3,
+                param4: param4,
+                param5: param5,
+                param6: param6,
+                param7: param7,
+                param8: param8,
+                param9: param9,
+                param10: param10,
+            };
+
+            // 发送AJAX请求到服务器
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload_params', true); // 使用你在服务器上定义的匹配图像的URL
+            xhr.setRequestHeader('Content-Type', 'application/json'); // 设置内容类型为JSON
+            xhr.send(JSON.stringify(params)); // 将参数对象转换为JSON字符串并发送
+
+            clearParameterInputs();
+
+            document.getElementById("parameterModal").style.display = "none";
+
+        }
+
+        // 打开匹配方法弹窗
+        function openMatchingMethodModal() {
+            document.getElementById('matchingMethodModal').style.display = 'block';
+        }
+
+        // 上传匹配方法设置
+        function uploadMeasures() {
+            var measures = {
+                matchingMethod1: document.getElementById('matchingMethod1').value,
+                matchingMethod2: document.getElementById('matchingMethod2').value,
+                matchingMethod3: document.getElementById('matchingMethod3').value,
+                parameter: document.getElementById('parameterInput').value
+            };
+
+            // 发送AJAX请求到服务器
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload_measures', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify(measures));
+
+            clearParameterInputs();
+
+            // 关闭弹窗
+            document.getElementById('matchingMethodModal').style.display = 'none';
+        }
+
+            //开始匹配
+        function startMatching() {
+            var formData = new FormData();
+            formData.append('image1', $('#image1')[0].files[0]);
+            formData.append('image2', $('#image2')[0].files[0]);
+
+            $("#displayImage1").attr('src', '');
+            $("#displayImage2").attr('src', '');
+
+            $("#resultImage").attr('src', '');
+
+            $.ajax({
+                url: '/match_images',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    $("#displayImage1").attr('src', response.img1_path);
+                    $("#displayImage2").attr('src', response.img2_path);
+                    $("#resultImage").attr('src', response.result_image_path);
+                },
+                error: function(error) {
+                    console.log(error);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

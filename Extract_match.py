@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import sift as sf
 import matplotlib.pyplot as plt
+import ourmatch
 plt.rcParams['font.sans-serif'] = ['SimHei']
 
 class EM_Sys():
@@ -29,6 +30,7 @@ class EM_Sys():
         good_matches = []
         if ma_method=='BF':
             ma_obj = cv2.BFMatcher()
+            #ma_obj = ourmatch.myBFMatcher()
         elif ma_method=='FLANN':
             ma_obj=cv2.FlannBasedMatcher()
         else:
@@ -43,6 +45,7 @@ class EM_Sys():
             dst_pts = np.float32([self.kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
             M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
             matches_mask = mask.ravel().tolist()
+            #matches_mask = ourmatch.our_RANSAC(good_matches,self.kp1,self.kp2)
             # 根据RANSAC结果筛选匹配点
             good_matches = [match for i, match in enumerate(good_matches) if matches_mask[i]]
         return M,good_matches
